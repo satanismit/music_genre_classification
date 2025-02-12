@@ -1,0 +1,54 @@
+# import libraries :
+import os
+import matplotlib.pyplot as plt
+import librosa
+import numpy as np
+import tensorflow as tf
+
+# Visualizing single audio :
+
+file_path='genres_original/rock/rock.00002.wav'
+
+y, sr=librosa.load(file_path,sr=44410)
+
+print(len(y))
+print("sampling rate:",sr)
+
+plt.figure(figsize=(14,6))
+
+
+# to display audio signal in the form of graph ( amplitude vs time)
+librosa.display.waveshow(y,sr=sr)
+
+
+# Doing visualization on chunks of Audio : 
+
+file_path='genres_original/rock/rock.00002.wav'
+y, sr=librosa.load(file_path,sr=None) # beacuse we use original sampling rate 
+
+# no of samples in 30 sec audio file 
+print(len(y),y.shape) # (661794,1)
+
+# define duration of chunks and overlap 
+chunks_duration=4
+overlap_duration=2
+
+# convert duration to sample
+chunks_samples=chunks_duration*sr
+overlap_samples=overlap_duration*sr
+
+print(chunks_samples)
+print(overlap_samples)
+
+#calculate the no of chunks 
+num_chunks=int(np.ceil((len(y)-chunks_samples)/(chunks_samples-overlap_samples)))+1
+print('no of chunks in 30 sec audio file:',num_chunks)
+
+# iterate all chunks 
+for i in range(num_chunks):
+    start=i*(chunks_samples-overlap_samples)
+    end=start+chunks_samples
+    chunk=y[start:end]
+    plt.figure(figsize=(6,5))
+    librosa.display.waveshow(chunk,sr=sr)
+    plt.show()
