@@ -73,3 +73,28 @@ def plot_melspectrogram(y,sr):
     plt.show()
 
 plot_melspectrogram(y,sr)
+def count_num_chunks(chunk_dur, overlap_dur,sr):
+    # convert duration to sample
+    chunks_samples=chunk_dur*sr
+    overlap_samples=overlap_dur*sr
+    
+    print("Chunks Samples:",chunks_samples)
+    print("Overlap Samples:",overlap_samples)
+    
+    #calculate the no of chunks 
+    num_chunks=int(np.ceil((len(y)-chunks_samples)/(chunks_samples-overlap_samples)))+1
+    print('no of chunks in 30 sec audio file:',num_chunks)
+    return num_chunks
+
+def plot_melspectrogram_chunks(y,sr):
+    
+    num_chunks=count_num_chunks(4,2,sr)
+    # iterate all chunks 
+    for i in range(num_chunks):
+        start=i*(chunks_samples-overlap_samples)
+        end=start+chunks_samples
+        chunk=y[start:end]
+        print("Melspectrogram : ", i+1)
+        plot_melspectrogram(chunk,sr)
+
+plot_melspectrogram_chunks(y,sr)
