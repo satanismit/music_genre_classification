@@ -52,3 +52,24 @@ for i in range(num_chunks):
     plt.figure(figsize=(6,5))
     librosa.display.waveshow(chunk,sr=sr)
     plt.show()
+
+# Melspectrogram Visualization :
+
+file_path='genres_original/rock/rock.00002.wav'
+y, sr=librosa.load(file_path,sr=44410)
+
+# melspectrogram of entire audio :
+def plot_melspectrogram(y,sr):
+    # compute melspectrogram :
+    spectrogram= librosa.feature.melspectrogram(y=y, sr=sr)
+    # convert to decible:
+    spectrogram_db=librosa.power_to_db(spectrogram, ref=np.max)
+
+    plt.figure(figsize=(10,4))
+    librosa.display.specshow(spectrogram_db,sr=sr, x_axis="time", y_axis="mel")
+    plt.colorbar(format='%2.0f db')
+    plt.title("Spectrogram")
+    plt.tight_layout()
+    plt.show()
+
+plot_melspectrogram(y,sr)
