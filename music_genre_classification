@@ -214,3 +214,11 @@ def load_and_preprocess_data(data_dir,classes,target_shape=(150,150)):
 
 data,labels = load_and_preprocess_data(data_dir,classes)
 
+from tensorflow.keras.utils import to_categorical
+labels = to_categorical(labels,num_classes = len(classes)) # Converting labels to one-hot encoding
+labels
+
+# Splitting of Dataset into Training and Test set
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,Y_train,Y_test = train_test_split(data,labels,test_size=0.2,random_state=42)
