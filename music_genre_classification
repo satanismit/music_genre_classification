@@ -6,10 +6,29 @@ import numpy as np
 import tensorflow as tf
 
 # Visualizing single audio :
+path1='genres_original/rock/rock.00002.wav'  
+path2='genres_original/blues/blues.00000.wav'
+path3='genres_original/classical/classical.00000.wav'
+path4='genres_original/country/country.00002.wav'
+path5='genres_original/disco/disco.00000.wav'
+path6='genres_original/hiphop/hiphop.00000.wav'
+path7='genres_original/jazz/jazz.00005.wav'
+path8='genres_original/metal/metal.00006.wav'
+path9='genres_original/pop/pop.00007.wav'
+path10='genres_original/reggae/reggae.00002.wav'
 
-file_path='genres_original/rock/rock.00002.wav'
+y_rock, sr1=librosa.load(path1,sr=44410)
+y_blues, sr2=librosa.load(path2,sr=44410)
+y_classical, sr3=librosa.load(path3,sr=44410)
+y_country, sr4=librosa.load(path4,sr=44410)
+y_disco, sr5=librosa.load(path5,sr=44410)
+y_hiphop, sr6=librosa.load(path6,sr=44410)
+y_jazz, sr7=librosa.load(path7,sr=44410)
+y_metal, sr8=librosa.load(path8,sr=44410)
+y_pop, sr9=librosa.load(path9,sr=44410)
+y_reggae, sr10=librosa.load(path10,sr=44410)
 
-y, sr=librosa.load(file_path,sr=44410)
+
 
 print(len(y))
 print("sampling rate:",sr)
@@ -18,7 +37,54 @@ plt.figure(figsize=(14,6))
 
 
 # to display audio signal in the form of graph ( amplitude vs time)
-librosa.display.waveshow(y,sr=sr)
+print("Rock audio : ")
+librosa.display.waveshow(y_rock,sr=sr1)
+
+plt.figure(figsize=(14,6))
+librosa.display.waveshow(y_blues,sr=sr2)
+print("Blues audio : ")
+plt.show()
+
+plt.figure(figsize=(14,6))
+print("Classical  audio : ")
+librosa.display.waveshow(y_classical,sr=sr3)
+
+plt.figure(figsize=(14,6))
+print("Country audio : ")
+librosa.display.waveshow(y_country,sr=sr4)
+
+plt.figure(figsize=(14,6))
+print("Disco audio : ")
+librosa.display.waveshow(y_disco,sr=sr5)
+
+plt.figure(figsize=(14,6))
+print("Hiphop  audio : ")
+librosa.display.waveshow(y_hiphop,sr=sr6)
+
+plt.figure(figsize=(14,6))
+print("jazz audio : ")
+librosa.display.waveshow(y_jazz,sr=sr7)
+
+plt.figure(figsize=(14,6))
+print("Metal audio : ")
+librosa.display.waveshow(y_metal,sr=sr8)
+
+plt.figure(figsize=(14,6))
+print("Pop audio : ")
+librosa.display.waveshow(y_pop,sr=sr9)
+plt.show()
+
+path='genres_original/pop/pop.00046.wav'
+y, sr=librosa.load(path,sr=44410)
+plt.figure(figsize=(14,6))
+print("Pop2 audio : ")
+librosa.display.waveshow(y_pop,sr=sr9)
+plt.show()
+
+
+plt.figure(figsize=(14,6))
+print("Reggae audio : ")
+librosa.display.waveshow(y_reggae,sr=sr10)
 
 
 # Doing visualization on chunks of Audio : 
