@@ -165,38 +165,52 @@ def plot_melspectrogram_chunks(y,sr):
 
 plot_melspectrogram_chunks(y,sr)
 
-def plot_melspectrogram_chunks(y,sr):
-    #define the duration of each chunk and overlap
-    chunk_duration = 4
-    overlap_duration = 2
-    
-    #Convert duration to sample
-    chunk_samples = chunk_duration * sr
-    overlap_samples = overlap_duration * sr
-    
-    #Calculate the number of chunks
-    num_chunks = int(np.ceil((len(y)-chunk_samples)/(chunk_samples-overlap_samples)))+1
-    
-    #iterate over each chunks
-    for i in range(num_chunks):
-        #Calculate start and end indices of the chunk
-        start = i*(chunk_samples-overlap_samples)
-        end = start+chunk_samples
-        #Extract the chunk audio
-        chunk = y[start:end]
-        #Melspectrogram part
-        spectrogram = librosa.feature.melspectrogram(y=chunk,sr=sr)
-        print(spectrogram.shape)
-        spectrogram_db = librosa.power_to_db(spectrogram,ref=np.max)
-        #Visualize the spectrogram
-        plt.figure(figsize=(10,4))
-        librosa.display.specshow(spectrogram_db,sr=sr,x_axis='time',y_axis='mel')
-        plt.colorbar(format='%2.0f dB')
-        plt.title("Spectrogram")
-        plt.tight_layout()
-        plt.show()
+# Data Preprocessing - Final
+#define your folder structure
+data_dir = "./genres_original"
+classes = ['blues', 'classical','country','disco','hiphop','jazz','metal','pop','reggae','rock']
 
-random_file_name = "./blues.00000.wav"
-y,sr = librosa.load(random_file_name,sr=44100)
+from tensorflow.image import resize
+#Load and preprocess audio data
+def load_and_preprocess_data(data_dir,classes,target_shape=(150,150)):
+    data=[]
+    labels=[]
 
-plot_melspectrogram_chunks(y,sr)
+    for i_class,class_name in enumerate(classes):
+        class_dir = os.path.join(data_dir,class_name)
+        print("Processing--",class_name)
+        for filename in os.listdir(class_dir):
+            if filename.endswith('.wav'):
+                file_path = os.path.join(class_dir,filename)
+                audio_data,sample_rate = librosa.load(file_path,sr=None)
+                #Performing Preprocessing
+                #define the duration of each chunk and overlap
+                chunk_duration = 4
+                overlap_duration = 2
+                
+                #Convert duration to sample
+                chunk_samples = chunk_duration * sample_rate
+                overlap_samples = overlap_duration * sample_rate
+                
+                #Calculate the number of chunks
+                num_chunks = int(np.ceil((len(audio_data)-chunk_samples)/(chunk_samples-overlap_samples)))+1
+                
+                #iterate over each chunks
+                for i in range(num_chunks):
+                    #Calculate start and end indices of the chunk
+                    start = i*(chunk_samples-overlap_samples)
+                    end = start+chunk_samples
+                    #Extract the chunk audio
+                    chunk = audio_data[start:end]
+                    #Melspectrogram part
+                    mel_spectrogram = librosa.feature.melspectrogram(y=chunk,sr=sample_rate)
+                    #Resize matrix based on provided target shape
+                    mel_spectrogram = resize(np.expand_dims(mel_spectrogram,axis=-1),target_shape)
+                    #Append data to list
+                    data.append(mel_spectrogram)
+                    labels.append(i_class)
+    #Return
+    return np.array(data),np.array(labels)
+
+data,labels = load_and_preprocess_data(data_dir,classes)
+
