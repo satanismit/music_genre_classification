@@ -5,14 +5,15 @@ import librosa
 import librosa.display
 import os
 import matplotlib.pyplot as plt
-from tensorflow.image import resize
 
-# Load model
+# -------------------------------
+# Load model with caching for performance
 @st.cache_resource()
 def load_model():
     return tf.keras.models.load_model("Trained_model.h5")
 
-# Load and preprocess audio data
+# -------------------------------
+# Load and preprocess audio data into overlapping chunks and mel spectrograms
 def load_and_preprocess_data(file_path, target_shape=(150, 150)):
     try:
         audio_data, sample_rate = librosa.load(file_path, sr=None)
@@ -36,19 +37,23 @@ def load_and_preprocess_data(file_path, target_shape=(150, 150)):
             chunk = np.pad(chunk, (0, chunk_samples - len(chunk)), mode='constant')
 
         mel_spectrogram = librosa.feature.melspectrogram(y=chunk, sr=sample_rate)
-        mel_spectrogram = resize(np.expand_dims(mel_spectrogram, axis=-1), target_shape)
+        mel_spectrogram = tf.image.resize(np.expand_dims(mel_spectrogram, axis=-1), target_shape)
         data.append(mel_spectrogram)
 
     return np.array(data), audio_data, sample_rate
 
-# Predict genre
-def model_prediction(X_test):
+# -------------------------------
+# Predict genre and return predicted genre + confidence scores
+def model_prediction_with_confidence(X_test):
     model = load_model()
     y_pred = model.predict(X_test)
-    predicted_categories = np.argmax(y_pred, axis=1)
-    unique_elements, counts = np.unique(predicted_categories, return_counts=True)
-    return unique_elements[np.argmax(counts)]
+    avg_pred = np.mean(y_pred, axis=0)
+    genre_list = list(genre_info.keys())
+    confidences = {genre_list[i]: float(avg_pred[i]) for i in range(len(genre_list))}
+    predicted_genre = max(confidences, key=confidences.get)
+    return predicted_genre, confidences
 
+# -------------------------------
 # Genre Information Dictionary
 genre_info = {
     "blues": "🎸 Blues music is known for its soulful melodies and expressive guitar solos.",
@@ -63,10 +68,12 @@ genre_info = {
     "rock": "🎸 Rock music features strong beats, electric guitars, and dynamic performances."
 }
 
+# -------------------------------
 # Sidebar Navigation
 st.sidebar.title("🎵 Music Genre Classifier")
 app_mode = st.sidebar.radio("Navigation", ["🏠 Home", "📂 Upload & Predict", "📊 Visualization", "ℹ️ About"])
 
+# -------------------------------
 # Home Page
 if app_mode == "🏠 Home":
     st.title("🎶 Welcome to the Music Genre Classifier!")
@@ -79,6 +86,13 @@ if app_mode == "🏠 Home":
     2️⃣ **AI extracts audio features** using Deep Learning 🤖  
     3️⃣ **The model predicts the genre** based on trained data 📊  
     4️⃣ **You can visualize the waveform & spectrogram** 🎨  
+    """)
+
+    # Audio Feature Explanation
+    st.subheader("🎨 Why Mel Spectrograms?")
+    st.write("""
+    Mel spectrograms represent audio frequencies on a scale that aligns with human hearing perception.  
+    They highlight important frequency components, making it easier for deep learning models to classify music genres accurately.
     """)
 
     # Why Choose Us?
@@ -103,12 +117,15 @@ if app_mode == "🏠 Home":
     📧 **Contact Us: support@musicgenreai.com**  
     """)
 
+# -------------------------------
 # Upload & Predict Page
 elif app_mode == "📂 Upload & Predict":
     st.header("🎼 Upload an Audio File for Prediction")
     test_mp3 = st.file_uploader("Upload a file", type=["mp3", "wav"])
 
     if test_mp3 is not None:
+        # Ensure directory exists
+        os.makedirs("Test_Music", exist_ok=True)
         filepath = os.path.join("Test_Music", test_mp3.name)
         with open(filepath, "wb") as f:
             f.write(test_mp3.getbuffer())
@@ -126,12 +143,15 @@ elif app_mode == "📂 Upload & Predict":
 
             if st.button("🎵 Predict Genre"):
                 with st.spinner("Analyzing..."):
-                    genre_list = list(genre_info.keys())  
-                    result_index = model_prediction(X_test)
-                    predicted_genre = genre_list[result_index]
+                    predicted_genre, confidences = model_prediction_with_confidence(X_test)
                     st.success(f"🎵 **Predicted Genre: {predicted_genre.capitalize()}**")
                     st.write(genre_info.get(predicted_genre, "No additional information available."))
 
+                    st.write("### Confidence Scores:")
+                    for genre, score in confidences.items():
+                        st.write(f"{genre.capitalize()}: {score:.2%}")
+
+# -------------------------------
 # Visualization Page
 elif app_mode == "📊 Visualization":
     st.header("📊 Audio Data Visualization")
@@ -141,11 +161,14 @@ elif app_mode == "📊 Visualization":
         sample_rate = st.session_state["sample_rate"]
 
         plt.figure(figsize=(10, 4))
-        librosa.display.waveshow(audio_data, sr=sample_rate)
+        # Fix: specify color explicitly to avoid prop_cycler error
+        librosa.display.waveshow(audio_data, sr=sample_rate, color='b')
         plt.xlabel("Time (s)")
         plt.ylabel("Amplitude")
         plt.title("Waveform")
+        plt.tight_layout()
         st.pyplot(plt)
+        plt.clf()
 
         mel_spectrogram = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate)
         mel_spectrogram_db = librosa.power_to_db(mel_spectrogram, ref=np.max)
@@ -153,14 +176,21 @@ elif app_mode == "📊 Visualization":
         librosa.display.specshow(mel_spectrogram_db, sr=sample_rate, x_axis="time", y_axis="mel")
         plt.colorbar(format="%+2.0f dB")
         plt.title("Mel Spectrogram")
+        plt.tight_layout()
         st.pyplot(plt)
+        plt.clf()
     else:
         st.warning("⚠️ No audio file uploaded. Please go to 'Upload & Predict' to upload a file.")
 
+# -------------------------------
 # About Page
 elif app_mode == "ℹ️ About":
     st.title("ℹ️ About This Project")
-    st.write("This AI-powered classifier uses Deep Learning to identify music genres.")
+    st.write("""
+    This AI-powered classifier uses Deep Learning to identify music genres from audio files.  
+    It leverages Mel spectrograms as input features and a convolutional neural network trained on diverse music data.  
+    The interactive Streamlit app allows uploading audio, visualizing waveforms and spectrograms, and viewing prediction confidence scores.  
+    """)
 
     st.markdown("""
     ---
@@ -168,3 +198,4 @@ elif app_mode == "ℹ️ About":
     🛠 **Powered by TensorFlow & Streamlit**  
     📧 **Contact Us: support@musicgenreai.com**  
     """)
+
