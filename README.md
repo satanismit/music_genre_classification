@@ -3,6 +3,9 @@
 ## 📌 Project Overview
 This project is a **Deep Learning-based Music Genre Classification System** that predicts the genre of a given music file using **Convolutional Neural Networks (CNNs)**. The model takes a `.wav` file as input, extracts its **Mel spectrogram**, and classifies it into one of 9 genres.
 
+## 🌟 Live Demo
+🚀 **[Try the Live Web App on Hugging Face Spaces](https://smitsatani-music-genre-classification.hf.space/)**
+
 ## 🏗️ Project Structure
 ```
 ├── Test_Music/                     # Directory to store test audio files
